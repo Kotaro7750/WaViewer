@@ -1,4 +1,5 @@
 import React from 'react';
+import { fetchWorkInformationList } from './FileUtil.js';
 import { WorkList } from './WorkList.js';
 
 export class RandomGallery extends React.Component {
@@ -8,7 +9,7 @@ export class RandomGallery extends React.Component {
       workInformationList: []
     };
 
-    this.fetchWorkInformationList();
+    fetchWorkInformationList().then(json => this.setState({workInformationList:json}));
   }
 
   render() {
@@ -44,16 +45,5 @@ export class RandomGallery extends React.Component {
     }
 
     return extractedWorkInformationList;
-  }
-
-  fetchWorkInformationList = () => {
-    const origin = new URL(window.location.href).origin;
-    const url = origin + '/works.json';
-
-    fetch(url).then(response => {
-      return response.json();
-    }).then(json => {
-      this.setState({ workInformationList: json });
-    });
   }
 }

@@ -60,8 +60,9 @@ export class PDFPage extends React.Component {
     // 描画の際のstate変更でこの関数が呼ばれないようにする
     // 一種の排他処理用のロックと見ることもできる
     this.duringRenderPage = true;
+    const filePath = this.props.filePath;
 
-    CachedPDFjsWrapper.getPDFPageProxyPromise(this.props.filename, this.props.pageNumber).then(page => {
+    CachedPDFjsWrapper.getPDFPageProxyPromise(filePath, this.props.pageNumber).then(page => {
       this.setState({ loadingPage: false });
 
       const canvas = this.canvasRef.current;
@@ -110,10 +111,10 @@ export class PDFPage extends React.Component {
         viewport: deviceViewport
       };
 
-      CachedPDFjsWrapper.renderPage(renderContext, this.props.filename, page);
+      CachedPDFjsWrapper.renderPage(renderContext, filePath, page);
       this.duringRenderPage = false;
     }).catch(() => {
-      CachedPDFjsWrapper.unsubscribe(this.props.filename);
+      CachedPDFjsWrapper.unsubscribe(filePath);
     });
   }
 }

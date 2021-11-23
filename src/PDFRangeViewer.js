@@ -1,4 +1,6 @@
 import React from 'react';
+
+import { constructFilePath } from './FileUtil.js';
 import { PDFPage } from './PDFPage.js';
 
 export class PDFRangeViewer extends React.Component {
@@ -59,12 +61,13 @@ export class PDFRangeViewer extends React.Component {
   }
 
   constructSinglePages = () => {
+    const workInformation = this.props.workInformation;
     let pages = [];
 
-    for (let pageNumber = this.props.startPageNumber; pageNumber <= this.props.endPageNumber; pageNumber++) {
+    for (let pageNumber = workInformation.startPageNumber; pageNumber <= workInformation.endPageNumber; pageNumber++) {
       pages.push(
         (<div key={pageNumber} className='svh-100 my-5'>
-          <PDFPage filename={this.props.filename} pageNumber={pageNumber} />
+          <PDFPage filePath={constructFilePath(workInformation.artist, workInformation.book_title)} pageNumber={pageNumber} />
         </div>)
       );
     }
@@ -73,31 +76,33 @@ export class PDFRangeViewer extends React.Component {
   }
 
   constructFacingPages = () => {
+    const workInformation = this.props.workInformation;
+    const filePath = constructFilePath(workInformation.artist, workInformation.book_title);
     let pages = [];
 
     let startPageNumberOfFacingPages;
 
     // 最初のページを見開きに加えないときには次のページ以降を見開きの対象とする
     if (this.state.isolatedStartPageWhenFacingPages) {
-      startPageNumberOfFacingPages = this.props.startPageNumber + 1;
+      startPageNumberOfFacingPages = workInformation.startPageNumber + 1;
 
       pages.push(
-        (<div key={this.props.startPageNumber} className='svh-100 my-5'>
-          <PDFPage filename={this.props.filename} pageNumber={this.props.startPageNumber} align={'center'} />
+        (<div key={workInformation.startPageNumber} className='svh-100 my-5'>
+          <PDFPage filePath={filePath} pageNumber={workInformation.startPageNumber} align={'center'} />
         </div>)
       );
     } else {
-      startPageNumberOfFacingPages = this.props.startPageNumber;
+      startPageNumberOfFacingPages = workInformation.startPageNumber;
     }
 
-    const numberOfRowsWithFacingPages = Math.floor((this.props.endPageNumber - startPageNumberOfFacingPages + 1) / 2);
+    const numberOfRowsWithFacingPages = Math.floor((workInformation.endPageNumber - startPageNumberOfFacingPages + 1) / 2);
 
     for (let i = 0; i < numberOfRowsWithFacingPages; i++) {
       // 見開きページの左ページ
       const leftPageNumber = startPageNumberOfFacingPages + 2 * i + 1;
       pages.push(
         (<div key={leftPageNumber} className='svh-100 my-5 col-6'>
-          <PDFPage filename={this.props.filename} pageNumber={leftPageNumber} align={'right'} />
+          <PDFPage filePath={filePath} pageNumber={leftPageNumber} align={'right'} />
         </div>)
       );
 
@@ -105,17 +110,17 @@ export class PDFRangeViewer extends React.Component {
       const rightPageNumber = startPageNumberOfFacingPages + 2 * i;
       pages.push(
         (<div key={rightPageNumber} className='svh-100 my-5 col-6'>
-          <PDFPage filename={this.props.filename} pageNumber={rightPageNumber} align={'left'} />
+          <PDFPage filePath={filePath} pageNumber={rightPageNumber} align={'left'} />
         </div>)
       );
     }
 
     // 最後に1ページだけ余った時の処理
-    if (startPageNumberOfFacingPages + 2 * numberOfRowsWithFacingPages - 1 != this.props.endPageNumber) {
+    if (startPageNumberOfFacingPages + 2 * numberOfRowsWithFacingPages - 1 != workInformation.endPageNumber) {
       pages.push(
         // 余ったページは中央揃えする
-        (<div key={this.props.endPageNumber} className='svh-100 my-5'>
-          <PDFPage filename={this.props.filename} pageNumber={this.props.endPageNumber} align={'center'} />
+        (<div key={workInformation.endPageNumber} className='svh-100 my-5'>
+          <PDFPage filePath={filePath} pageNumber={workInformation.endPageNumber} align={'center'} />
         </div>)
       );
     }
