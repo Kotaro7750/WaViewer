@@ -112,6 +112,8 @@ export class PDFPage extends React.Component {
 
       CachedPDFjsWrapper.renderPage(renderContext, this.props.filename, page);
       this.duringRenderPage = false;
+    }).catch(() => {
+      CachedPDFjsWrapper.unsubscribe(this.props.filename);
     });
   }
 }

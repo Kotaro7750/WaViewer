@@ -11,11 +11,7 @@ export class CachedPDFjsWrapper {
     });
   }
 
-  // 参照カウント形式のGCみたいなもの
-  static handleRenderCompleted(filename, pdfPageProxy, renderTask) {
-    renderTask.cancel();
-    pdfPageProxy.cleanup();
-
+  static unsubscribe(filename) {
     if (filename in this.cache) {
       this.cache[filename]['referenceCount']--;
 
@@ -29,6 +25,14 @@ export class CachedPDFjsWrapper {
         });
       }
     }
+  }
+
+  // 参照カウント形式のGCみたいなもの
+  static handleRenderCompleted(filename, pdfPageProxy, renderTask) {
+    renderTask.cancel();
+    pdfPageProxy.cleanup();
+
+    this.unsubscribe(filename);
   }
 
   static getPDFDocumentProxyPromise(filename) {
