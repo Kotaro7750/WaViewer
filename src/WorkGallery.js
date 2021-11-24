@@ -1,16 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
+
 import { useLocation } from 'react-router-dom';
-import { fetchWorkInformationList } from './FileUtil.js';
+import { useWorkInformationList } from './FileUtil.js';
 import { WorkList } from './WorkList.js';
 
 export function WorkGallery() {
-  const [workInformationList, setWorkInformationList] = useState([]);
-
-  if (workInformationList.length == 0) {
-    fetchWorkInformationList().then(json => {
-      setWorkInformationList(json);
-    });
-  }
+  const workInformationList = useWorkInformationList();
 
   const { search } = useLocation();
   let query = new URLSearchParams(search);

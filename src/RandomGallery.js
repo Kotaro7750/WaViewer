@@ -1,49 +1,40 @@
 import React from 'react';
-import { fetchWorkInformationList } from './FileUtil.js';
+import { useWorkInformationList } from './FileUtil.js';
 import { WorkList } from './WorkList.js';
 
-export class RandomGallery extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      workInformationList: []
-    };
+export function RandomGallery() {
+  const workInformationList = useWorkInformationList();
 
-    fetchWorkInformationList().then(json => this.setState({workInformationList:json}));
+  const workNumber = 8;
+  const extractedWorkInformationList = extractWorkInformationRandomly(workInformationList, workNumber);
+
+  return (
+    <WorkList workInformationList={extractedWorkInformationList} />
+  )
+}
+
+
+function extractWorkInformationRandomly(workInformationList, n) {
+  const workInformationListLength = workInformationList.length;
+
+  // 必要な量よりも少なかった場合には全てを返す
+  if (workInformationListLength <= n) {
+    return workInformationList;
   }
 
-  render() {
-    const workNumber = 8;
-    const extractedWorkInformationList = this.extractWorkInformationRandomly(workNumber);
+  let extractedWorkInformationList = [];
 
-    return (
-      <WorkList workInformationList={extractedWorkInformationList} />
-    )
-  }
+  let duplicateCheker = {};
+  for (let i = 0; i < n; i++) {
+    let randomIndex = Math.floor(Math.random() * workInformationListLength);
 
-  extractWorkInformationRandomly = (n) => {
-    const workInformationList = this.state.workInformationList;
-    const workInformationListLength = workInformationList.length;
-
-    // 必要な量よりも少なかった場合には全てを返す
-    if (workInformationListLength <= n) {
-      return workInformationList;
+    while (randomIndex in duplicateCheker) {
+      randomIndex = Math.floor(Math.random() * workInformationListLength);
     }
 
-    let extractedWorkInformationList = [];
-
-    let duplicateCheker = {};
-    for (let i = 0; i < n; i++) {
-      let randomIndex = Math.floor(Math.random() * workInformationListLength);
-
-      while (randomIndex in duplicateCheker) {
-        randomIndex = Math.floor(Math.random() * workInformationListLength);
-      }
-
-      extractedWorkInformationList.push(workInformationList[randomIndex]);
-      duplicateCheker[randomIndex] = true;
-    }
-
-    return extractedWorkInformationList;
+    extractedWorkInformationList.push(workInformationList[randomIndex]);
+    duplicateCheker[randomIndex] = true;
   }
+
+  return extractedWorkInformationList;
 }
