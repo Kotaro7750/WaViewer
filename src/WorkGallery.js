@@ -2,6 +2,8 @@ import React from 'react';
 
 import { useLocation } from 'react-router-dom';
 import { useWorkInformationList } from './FileUtil.js';
+
+import { SearchBox } from './SearchBox.js';
 import { WorkList } from './WorkList.js';
 
 export function WorkGallery() {
@@ -17,9 +19,8 @@ export function WorkGallery() {
 
   return (
     <div>
-      <div className='row'>
-        <WorkList workInformationList={fileterdWorkInformationList} />
-      </div>
+      <SearchBox />
+      <WorkList workInformationList={fileterdWorkInformationList} />
     </div>
   );
 }
