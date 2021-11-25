@@ -27,6 +27,7 @@ export function WorkGallery() {
 
 function constructFilter(query) {
   let filter = {};
+  filter.keyword = query.get('keyword') || '';
   filter.artist = query.get('artist') || '';
   filter.bookTitle = query.get('book_title') || '';
 
@@ -34,7 +35,7 @@ function constructFilter(query) {
 }
 
 function isFilterEmpty(filter) {
-  return filter.artist == '' && filter.bookTitle == '';
+  return filter.artist == '' && filter.bookTitle == '' && filter.keyword == '';
 }
 
 function extractByFilter(workInformationList, filter) {
@@ -54,6 +55,7 @@ function extractByFilter(workInformationList, filter) {
 }
 
 function isMatchWithFilter(workInformation, filter) {
+  // 作者と本のタイトルが指定されたときには完全一致
   if (filter.artist != '' && workInformation.artist != filter.artist) {
     return false;
   }
@@ -62,5 +64,21 @@ function isMatchWithFilter(workInformation, filter) {
     return false;
   }
 
+  if (filter.keyword != '') {
+    // 作品の数だけ同じ正規表現が生成されるのでよくない
+    const regExp = new RegExp(filter.keyword);
+    if (!isKeywordMatch(workInformation, regExp)) {
+      return false;
+    }
+  }
+
   return true;
+}
+
+function isKeywordMatch(workInformation, regExp) {
+  if (regExp.test(workInformation.artist) || regExp.test(workInformation.book_title) || regExp.test(workInformation.title)) {
+    return true;
+  }
+
+  return false;
 }

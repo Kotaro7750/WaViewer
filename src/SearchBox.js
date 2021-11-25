@@ -5,6 +5,7 @@ export function SearchBox(props) {
   const navigate = useNavigate();
   const [artist, setArtist] = useState('');
   const [bookTitle, setBookTitle] = useState('');
+  const [keyword, setKeyword] = useState('');
 
   const constructURLParam = () => {
     let urlSearchParam = new URLSearchParams('');
@@ -17,11 +18,22 @@ export function SearchBox(props) {
       urlSearchParam.append('book_title', bookTitle);
     }
 
+    if (keyword != '') {
+      urlSearchParam.append('keyword', keyword);
+    }
+
     return '?' + urlSearchParam.toString();
   }
 
   return (
     <div>
+      <div>
+        <label className='form-label'>
+          Keyword
+        <input type='text' className='form-control' value={keyword} onChange={e => setKeyword(e.target.value)} />
+        </label>
+      </div>
+
       <div>
         <label className='form-label'>
           Artist
