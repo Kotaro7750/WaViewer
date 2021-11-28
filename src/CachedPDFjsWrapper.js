@@ -15,7 +15,7 @@ export class CachedPDFjsWrapper {
     if (filepath in this.cache) {
       this.cache[filepath]['referenceCount']--;
 
-      if (this.cache[filepath]['referenceCount'] == 0) {
+      if (this.cache[filepath]['referenceCount'] <= 0) {
         let pdfDocumentProxyPromise = this.cache[filepath]['PDFDocumentProxyPromise'];
         delete this.cache[filepath];
 

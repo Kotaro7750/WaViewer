@@ -6,6 +6,7 @@ export function PDFPage(props) {
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const shouldNextRender = useRef(true);
   const isRenderCompleted = useRef(true);
+  const isUnmounted = useRef(false);
 
   const canvasRef = useRef(null);
 
@@ -23,6 +24,11 @@ export function PDFPage(props) {
     const filePath = props.filePath;
 
     CachedPDFjsWrapper.getPDFPageProxyPromise(filePath, props.pageNumber).then(page => {
+      // 既にアンマウントされていた場合には例外を投げることによってレンダーを中止させGCを走らせる
+      if (isUnmounted.current) {
+        // 本当は空エラーは良くないのかもしれないけどとりあえずこうする
+        throw new Error();
+      }
       setIsLoadingPage(false);
 
       const canvas = canvasRef.current;
@@ -94,6 +100,11 @@ export function PDFPage(props) {
       shouldNextRender.current = true;
     }
   });
+
+  // 第二引数に空配列を渡すことでマウント時，アンマウント時のみ実行されるようにする
+  useEffect(() => {
+    return () => { isUnmounted.current = true; }
+  }, []);
 
   // ページを左右・真ん中にアラインするためのクラス
   let marginClassName;
