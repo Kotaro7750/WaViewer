@@ -1,73 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { constructFilePath } from './FileUtil.js';
 import { PDFPage } from './PDFPage.js';
 
-export class PDFRangeViewer extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      enableFacingPages: false,
-      isolatedStartPageWhenFacingPages: false
-    }
-  }
+export function PDFRangeViewer(props) {
+  const [enableFacingPages, setEnableFacingPages] = useState(false);
+  const [isolatedStartPageWhenFacingPages, setIsolatedStartPageWhenFacingPages] = useState(false);
 
-  render() {
-    let pages = [];
+  // --- 各ページコンポーネント生成用関数 ---
+  const workInformation = props.workInformation;
+  const filePath = constructFilePath(workInformation.artist, workInformation.book_title);
 
-    if (this.state.enableFacingPages) {
-      pages = this.constructFacingPages();
-    } else {
-      pages = this.constructSinglePages();
-    }
-
-    return (
-      <div>
-        <div className='form-check form-switch'>
-          <label className='form-check-label'>
-            Facing Pages
-            <input className='form-check-input' type='checkbox' checked={this.state.enableFacingPages} onChange={this.handleToggleFacingPages} />
-          </label>
-        </div>
-        {this.state.enableFacingPages
-          ? (
-            <div className='form-check form-switch'>
-              <label className='form-check-label'>
-                Toggle First Page
-            <input className='form-check-input' type='checkbox' checked={this.state.isolatedStartPageWhenFacingPages} onChange={this.handleToggleIsolatedStartPage} />
-              </label>
-            </div>
-          )
-          : null
-        }
-
-        <div className='row'>
-          {pages}
-        </div>
-      </div>
-    )
-  }
-
-  handleToggleFacingPages = () => {
-    this.setState((state) => ({
-      enableFacingPages: !state.enableFacingPages
-    }));
-  }
-
-  handleToggleIsolatedStartPage = () => {
-    this.setState((state) => ({
-      isolatedStartPageWhenFacingPages: !state.isolatedStartPageWhenFacingPages
-    }));
-  }
-
-  constructSinglePages = () => {
-    const workInformation = this.props.workInformation;
+  const constructSinglePages = () => {
     let pages = [];
 
     for (let pageNumber = workInformation.startPageNumber; pageNumber <= workInformation.endPageNumber; pageNumber++) {
       pages.push(
         (<div key={pageNumber} className='svh-100 my-5'>
-          <PDFPage filePath={constructFilePath(workInformation.artist, workInformation.book_title)} pageNumber={pageNumber} />
+          <PDFPage filePath={filePath} pageNumber={pageNumber} />
         </div>)
       );
     }
@@ -75,15 +25,13 @@ export class PDFRangeViewer extends React.Component {
     return pages;
   }
 
-  constructFacingPages = () => {
-    const workInformation = this.props.workInformation;
-    const filePath = constructFilePath(workInformation.artist, workInformation.book_title);
+  const constructFacingPages = () => {
     let pages = [];
 
     let startPageNumberOfFacingPages;
 
     // 最初のページを見開きに加えないときには次のページ以降を見開きの対象とする
-    if (this.state.isolatedStartPageWhenFacingPages) {
+    if (isolatedStartPageWhenFacingPages) {
       startPageNumberOfFacingPages = workInformation.startPageNumber + 1;
 
       pages.push(
@@ -127,4 +75,48 @@ export class PDFRangeViewer extends React.Component {
 
     return pages;
   }
+
+  // --- トグルボタンハンドラ ----
+  const handleToggleFacingPages = () => {
+    setEnableFacingPages(prev => !prev);
+  }
+
+  const handleToggleIsolatedStartPage = () => {
+    setIsolatedStartPageWhenFacingPages(prev => !prev);
+  }
+
+  // --- render処理 ---
+  let pages = [];
+
+  if (enableFacingPages) {
+    pages = constructFacingPages();
+  } else {
+    pages = constructSinglePages();
+  }
+
+  return (
+    <div>
+      <div className='form-check form-switch'>
+        <label className='form-check-label'>
+          Facing Pages
+            <input className='form-check-input' type='checkbox' checked={enableFacingPages} onChange={handleToggleFacingPages} />
+        </label>
+      </div>
+      {enableFacingPages
+        ? (
+          <div className='form-check form-switch'>
+            <label className='form-check-label'>
+              Toggle First Page
+            <input className='form-check-input' type='checkbox' checked={isolatedStartPageWhenFacingPages} onChange={handleToggleIsolatedStartPage} />
+            </label>
+          </div>
+        )
+        : null
+      }
+
+      <div className='row'>
+        {pages}
+      </div>
+    </div>
+  );
 }

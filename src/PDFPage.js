@@ -1,74 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { CachedPDFjsWrapper } from './CachedPDFjsWrapper.js';
 
-export class PDFPage extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      loadingPage: true
-    }
+export function PDFPage(props) {
+  const [isLoadingPage, setIsLoadingPage] = useState(true);
+  const shouldNextRender = useRef(true);
+  const isRenderCompleted = useRef(true);
 
-    this.duringRenderPage = false;
-    this.canvasRef = React.createRef();
-  }
+  const canvasRef = useRef(null);
 
-  render() {
-    // ページを左右・真ん中にアラインするためのクラス
-    let marginClassName;
-    if (this.props.align == 'left') {
-      marginClassName = ' me-auto';
-    } else if (this.props.align == 'right') {
-      marginClassName = ' ms-auto'
-    } else {
-      marginClassName = ' mx-auto';
-    }
-
-    const shadowClassName = this.props.disableShadow ? '' : ' shadow-lg';
-
-    const page_element = this.state.loadingPage
-      ? (
-        <div className='d-flex justify-content-center'>
-          <div className='spinner-border'><span /></div>
-        </div>
-      )
-      : <canvas ref={this.canvasRef} className={'d-block' + marginClassName + shadowClassName} />;
-
-    return (
-      <div className='' id={'page-container-body-' + String(this.props.pageNumber)}>
-        {page_element}
-      </div>
-    )
-  }
-
-  componentDidMount() {
-    this.renderPageAdjustParent();
-  }
-
-  componentWillUpdate() {
-    // 見開き表示のトグルなどrenderが呼ばれるときにはキャンバスサイズに合わせてページを描画したい
-    // 描画ルーチンの内部でstateを書き換えているので無限renderループを防ぐ
-    // 親からの再レンダーでは描画し直したいが，描画ルーチンの内部でのstate書き換えでは描画し直してはいけないのでstateとは別の状態を持っておく
-    if (this.state.loadingPage == false && this.duringRenderPage == false) {
-      this.setState({ loadingPage: true });
-      this.renderPageAdjustParent();
-    }
+  // 描画ルーチン完了によるrenderの際にレンダー終了判定をする
+  if (isLoadingPage == false) {
+    isRenderCompleted.current = true;
   }
 
   // canvasの親要素やビューポートの大きさに合わせて適切なサイズで描画する
-  renderPageAdjustParent = () => {
+  const renderPageAdjustParent = () => {
     // 描画の際のstate変更でこの関数が呼ばれないようにする
     // 一種の排他処理用のロックと見ることもできる
-    this.duringRenderPage = true;
-    const filePath = this.props.filePath;
+    isRenderCompleted.current = false;
 
-    CachedPDFjsWrapper.getPDFPageProxyPromise(filePath, this.props.pageNumber).then(page => {
-      this.setState({ loadingPage: false });
+    const filePath = props.filePath;
 
-      const canvas = this.canvasRef.current;
+    CachedPDFjsWrapper.getPDFPageProxyPromise(filePath, props.pageNumber).then(page => {
+      setIsLoadingPage(false);
+
+      const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
 
-      const cardBodyContainer = document.getElementById('page-container-body-' + String(this.props.pageNumber));
+      const cardBodyContainer = document.getElementById('page-container-body-' + String(props.pageNumber));
       const containerComputedStyle = window.getComputedStyle(cardBodyContainer);
 
       const containerWidth = cardBodyContainer.clientWidth - parseFloat(containerComputedStyle.paddingLeft) - parseFloat(containerComputedStyle.paddingRight);
@@ -81,7 +41,7 @@ export class PDFPage extends React.Component {
 
       // 幅のみに合わせなければいけないときを除き，幅・高さの制約を両方満たすようにする
       let scaleForCSSPixel;
-      if (this.props.adjustWidth) {
+      if (props.adjustWidth) {
         scaleForCSSPixel = scaleAdjustParentWidth;
       } else {
         scaleForCSSPixel = Math.min(scaleAdjustViewportHeight, scaleAdjustParentWidth);
@@ -112,9 +72,52 @@ export class PDFPage extends React.Component {
       };
 
       CachedPDFjsWrapper.renderPage(renderContext, filePath, page);
-      this.duringRenderPage = false;
     }).catch(() => {
       CachedPDFjsWrapper.unsubscribe(filePath);
     });
   }
+
+  useEffect(() => {
+    // 見開き表示のトグルなどrenderが呼ばれるときにはキャンバスサイズに合わせてページを描画したい
+    // 描画ルーチンの内部でstateを書き換えているので無限renderループを防ぐ
+    // 親からの再レンダーでは描画し直したいが，描画ルーチンの内部でのstate書き換えでは描画し直してはいけないのでstateとは別の状態を持っておく
+    if (shouldNextRender.current) {
+      setIsLoadingPage(true);
+      shouldNextRender.current = false;
+
+      renderPageAdjustParent();
+    }
+
+    // 描画ルーチンで描画した際のstate変更によるrenderの次のrenderで再度描画ルーチンを呼び出す必要がある
+    // そのためのラッチのようなもの
+    if (isRenderCompleted.current) {
+      shouldNextRender.current = true;
+    }
+  });
+
+  // ページを左右・真ん中にアラインするためのクラス
+  let marginClassName;
+  if (props.align == 'left') {
+    marginClassName = ' me-auto';
+  } else if (props.align == 'right') {
+    marginClassName = ' ms-auto'
+  } else {
+    marginClassName = ' mx-auto';
+  }
+
+  const shadowClassName = props.disableShadow ? '' : ' shadow-lg';
+
+  const page_element = isLoadingPage
+    ? (
+      <div className='d-flex justify-content-center'>
+        <div className='spinner-border'><span /></div>
+      </div>
+    )
+    : <canvas ref={canvasRef} className={'d-block' + marginClassName + shadowClassName} />;
+
+  return (
+    <div className='' id={'page-container-body-' + String(props.pageNumber)}>
+      {page_element}
+    </div>
+  )
 }
