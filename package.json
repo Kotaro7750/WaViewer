@@ -1,14 +1,13 @@
 {
-  "name": "viewer",
+  "name": "wa-viewer",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "build": "webpack",
-    "start": "webpack-dev-server --mode development",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "webpack-dev-server --mode development"
   },
-  "author": "",
+  "author": "Kotaro7750",
   "license": "MIT",
   "dependencies": {
     "bootstrap": "^5.1.3",
